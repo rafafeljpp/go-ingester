@@ -1,10 +1,14 @@
-package job
+package pool
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // Job type.
 type Job struct {
 	Payload string
+	wait    time.Duration
 }
 
 func init() {

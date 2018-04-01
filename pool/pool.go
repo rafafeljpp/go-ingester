@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+// Constantes
+const (
+	IsOk   string = "OK"     /* Estado OK */
+	Locked string = "Locked" /* Estado LOCKED */
+)
+
 // Pool object
 type Pool struct {
 	workers             []*Worker
