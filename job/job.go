@@ -1,6 +1,12 @@
 package job
 
+import "fmt"
+
 // Job type.
-type job struct {
+type Job struct {
 	Payload string
+}
+
+func init() {
+	fmt.Println("rectangle package initialized")
 }

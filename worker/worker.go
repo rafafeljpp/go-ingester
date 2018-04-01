@@ -10,12 +10,13 @@ import (
 type Worker struct {
 	id        int
 	startedAt time.Time
-	messages  chan job
+	messages  chan Job
 	signals   chan string
 	status    string
 }
 
 func (w *Worker) listen(wg *sync.WaitGroup) {
+
 	defer wg.Done()
 	for {
 		select {
