@@ -1,6 +1,6 @@
-package Job
+package job
 
 // Job type.
-type Job struct {
+type job struct {
 	Payload string
 }
