@@ -1,4 +1,4 @@
-package job
+package Job
 
 // Job type.
 type Job struct {
