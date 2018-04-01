@@ -10,7 +10,7 @@ import (
 type Worker struct {
 	id        int
 	startedAt time.Time
-	messages  chan Job
+	messages  chan job
 	signals   chan string
 	status    string
 }
