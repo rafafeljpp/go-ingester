@@ -8,5 +8,5 @@ type Job struct {
 }
 
 func init() {
-	fmt.Println("rectangle package initialized")
+	fmt.Println("job inicializado")
 }

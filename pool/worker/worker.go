@@ -15,6 +15,10 @@ type Worker struct {
 	status    string
 }
 
+func init() {
+	fmt.Println("worker inicializado")
+}
+
 func (w *Worker) listen(wg *sync.WaitGroup) {
 
 	defer wg.Done()

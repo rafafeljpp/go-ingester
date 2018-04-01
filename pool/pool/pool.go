@@ -2,6 +2,7 @@ package pool
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -98,4 +99,7 @@ func (p *Pool) addJob(j Job) (Job, error) {
 
 	return j, errors.New("Rechazado, Máximo número de elementos en cola o mensaje bloqueado")
 
+}
+func init() {
+	fmt.Println("pool inicializado")
 }
