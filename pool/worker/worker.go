@@ -2,10 +2,17 @@ package pool
 
 import (
 	"fmt"
+	. "go-ingester/pool/job"
 	"sync"
 	"time"
 )
 
+const (
+	IsOk   string = "OK"
+	Locked string = "Locked"
+)
+
+// Worker
 type Worker struct {
 	id        int
 	startedAt time.Time
@@ -15,14 +22,15 @@ type Worker struct {
 }
 
 // Listen worker.
-func Listen(w *Worker, wg *sync.WaitGroup) {
+func (w *Worker) Listen(wg *sync.WaitGroup) {
 
 	defer wg.Done()
 	for {
 		select {
 		case msg := <-w.messages:
 			fmt.Println("Mensaje recibido por el worker: ", w.id, msg.Payload)
-			time.Sleep(time.Second * msg.wait)
+
+			//time.Sleep(time.Second * msg.wait)
 			break
 		case <-w.signals:
 			fmt.Println("finalizando el worker ", w.id)
@@ -35,5 +43,5 @@ func Listen(w *Worker, wg *sync.WaitGroup) {
 }
 
 func init() {
-	fmt.Println("worker inicializado")
+	fmt.Println("Worker del paquete pool inicializado")
 }

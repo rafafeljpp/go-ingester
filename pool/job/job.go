@@ -7,8 +7,11 @@ import (
 
 // Job type.
 type Job struct {
+	// Payload
 	Payload string
-	wait    time.Duration
+
+	// Wait
+	wait time.Duration
 }
 
 func init() {

@@ -1,15 +1,11 @@
 package pool
 
 import (
-	"errors"
 	"fmt"
 	"sync"
-	"time"
-)
 
-const (
-	IsOk   string = "OK"
-	Locked string = "Locked"
+	. "go-ingester/pool/job"
+	. "go-ingester/pool/worker"
 )
 
 type Pool struct {
@@ -21,8 +17,14 @@ type Pool struct {
 	rejected            chan Job
 }
 
+func start() {
+	fmt.Println("Hola")
+}
+
+/*
 // Start workers of the pool
-func Start(p *Pool) {
+func (p *Pool) Start() {
+
 	var w *Worker
 	var wg sync.WaitGroup
 
@@ -31,22 +33,23 @@ func Start(p *Pool) {
 	// Creando workers
 
 	for i := 0; i < p.maxWorkers; i++ {
-		w = createWorker(p, i)
+		w = p.createWorker(i)
 		wg.Add(1)
-		go Listen(w, &wg)
+		go w.Listen(&wg)
 	}
 
 	wg.Wait()
 }
 
 // Stop the pool
-func Stop(p *Pool) {
+func (p *Pool) Stop() {
 
 	for _, wk := range p.workers {
 		wk.signals <- "stop"
+
 	}
 	for {
-		if Length(p) == 0 {
+		if p.Length() == 0 {
 			break
 		}
 
@@ -55,20 +58,21 @@ func Stop(p *Pool) {
 }
 
 // Length of the pool
-func Length(p *Pool) int {
+func (p *Pool) Length() int {
 	var AliveCounter int
 
-	for _, worker := range p.workers {
-		if worker.status == IsOk {
+	for _, w := range p.workers {
+		if w.status == IsOk {
 			AliveCounter++
 		}
 	}
 	return AliveCounter
 }
 
-func createWorker(p *Pool, id int) *Worker {
+func (p *Pool) createWorker(id int) *Worker {
 
 	w := new(Worker)
+
 	w.id = id
 	w.status = IsOk
 	w.startedAt = time.Now()
@@ -81,7 +85,7 @@ func createWorker(p *Pool, id int) *Worker {
 }
 
 // AddJob to de pool
-func addJob(p *Pool, j Job) (Job, error) {
+func (p *Pool) addJob(j Job) (Job, error) {
 	var w *Worker
 
 	// Selección del índice
@@ -107,3 +111,4 @@ func addJob(p *Pool, j Job) (Job, error) {
 func init() {
 	fmt.Println("Pool package inicializado")
 }
+*/
