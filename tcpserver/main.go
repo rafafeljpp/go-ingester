@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"go-ingester/pool"
+	p "go-ingester/pool"
 )
 
 func main() {
-	var x *pool.Pool
-	fmt.Println(x)
+
+	p := new(p.Pool)
+	fmt.Println(p.start())
 
 }

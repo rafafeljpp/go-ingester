@@ -24,7 +24,7 @@ type Pool struct {
 	rejected chan Job
 }
 
-// Pool.len()
+// Pool.start()
 func (p *Pool) start() {
 	var w *Worker
 	var wg sync.WaitGroup

@@ -1,7 +1,18 @@
 package pool
 
+import (
+	"fmt"
+	"testing"
+)
+
+func TestStart(t *testing.T) {
+	var p *Pool
+	fmt.Println("Hola", p)
+}
+
+/*
 func main() {
-	/*
+
 		var errc int
 		rejectedChannel := make(chan Job)
 		var waitFor time.Duration
@@ -45,5 +56,6 @@ func main() {
 
 		fmt.Println("Rejected: ", errc)
 		fmt.Println("Colas después de stop():", p.len())
-	*/
+
 }
+*/

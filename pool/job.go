@@ -12,5 +12,5 @@ type Job struct {
 }
 
 func init() {
-	fmt.Println("job inicializado")
+	fmt.Println("job package inicializado")
 }
