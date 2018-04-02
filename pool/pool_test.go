@@ -7,6 +7,7 @@ import (
 
 func TestStart(t *testing.T) {
 	var p *Pool
+
 	fmt.Println("Hola", p)
 }
 

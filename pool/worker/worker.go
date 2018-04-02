@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-// Worker type
 type Worker struct {
 	id        int
 	startedAt time.Time
@@ -15,11 +14,8 @@ type Worker struct {
 	status    string
 }
 
-func init() {
-	fmt.Println("worker inicializado")
-}
-
-func (w *Worker) listen(wg *sync.WaitGroup) {
+// Listen worker.
+func Listen(w *Worker, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 	for {
@@ -36,4 +32,8 @@ func (w *Worker) listen(wg *sync.WaitGroup) {
 			return
 		}
 	}
+}
+
+func init() {
+	fmt.Println("worker inicializado")
 }

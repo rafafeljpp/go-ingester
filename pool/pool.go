@@ -7,25 +7,22 @@ import (
 	"time"
 )
 
-// Constantes
 const (
 	IsOk   string = "OK"     /* Estado OK */
 	Locked string = "Locked" /* Estado LOCKED */
 )
 
-// Pool object
 type Pool struct {
 	workers             []*Worker
 	maxWorkers          int
 	maxElementsPerQueue int
-
-	cIndex   int
-	mutex    sync.Mutex
-	rejected chan Job
+	cIndex              int
+	mutex               sync.Mutex
+	rejected            chan Job
 }
 
-// Pool.start()
-func (p *Pool) start() {
+// Start workers of the pool
+func Start(p *Pool) {
 	var w *Worker
 	var wg sync.WaitGroup
 
@@ -34,22 +31,22 @@ func (p *Pool) start() {
 	// Creando workers
 
 	for i := 0; i < p.maxWorkers; i++ {
-		w = p.createWorker(i)
+		w = createWorker(p, i)
 		wg.Add(1)
-		go w.listen(&wg)
+		go Listen(w, &wg)
 	}
 
 	wg.Wait()
-
 }
 
-func (p *Pool) stop() {
+// Stop the pool
+func Stop(p *Pool) {
 
 	for _, wk := range p.workers {
 		wk.signals <- "stop"
 	}
 	for {
-		if p.len() == 0 {
+		if Length(p) == 0 {
 			break
 		}
 
@@ -57,8 +54,8 @@ func (p *Pool) stop() {
 	return
 }
 
-// Pool.len()
-func (p *Pool) len() int {
+// Length of the pool
+func Length(p *Pool) int {
 	var AliveCounter int
 
 	for _, worker := range p.workers {
@@ -69,7 +66,7 @@ func (p *Pool) len() int {
 	return AliveCounter
 }
 
-func (p *Pool) createWorker(id int) *Worker {
+func createWorker(p *Pool, id int) *Worker {
 
 	w := new(Worker)
 	w.id = id
@@ -83,8 +80,8 @@ func (p *Pool) createWorker(id int) *Worker {
 	return w
 }
 
-// Pool.AddJob()
-func (p *Pool) addJob(j Job) (Job, error) {
+// AddJob to de pool
+func addJob(p *Pool, j Job) (Job, error) {
 	var w *Worker
 
 	// Selección del índice
@@ -106,6 +103,7 @@ func (p *Pool) addJob(j Job) (Job, error) {
 	return j, errors.New("Rechazado, Máximo número de elementos en cola o mensaje bloqueado")
 
 }
+
 func init() {
-	fmt.Println("pool inicializado")
+	fmt.Println("Pool package inicializado")
 }
