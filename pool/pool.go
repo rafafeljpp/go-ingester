@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	IsOk   string = "OK"     /* Estado OK */
-	Locked string = "Locked" /* Estado LOCKED */
+	IsOk   string = "OK"
+	Locked string = "Locked"
 )
 
 type Pool struct {
