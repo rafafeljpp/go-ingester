@@ -8,15 +8,20 @@ import (
 	"time"
 )
 
+type MyJob struct {
+	payload string
+	wait    time.Duration
+}
+
 func main() {
 
-	var errc int
-	rejectedChannel := make(chan pool.Job)
 	var waitFor time.Duration
+
+	//rejectedChannel := make(chan MyJob)
 	pm := new(pool.Manager)
 
 	//Iniciando...
-	go pm.Start(10, 100)
+	go pm.Start(10, 10)
 
 	for {
 		if pm.Length() == pm.GetMaxWorkers() {
@@ -24,32 +29,36 @@ func main() {
 		}
 	}
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 50; i++ {
 		waitFor = 0
 		if i == 10 {
 			waitFor = 12
 		}
-		MyJob := pool.Job{Payload: "Mensaje " + strconv.Itoa(i), Wait: waitFor}
 
-		//p.addJob(MyJob)
-		start := time.Now()
+		payload := "Mensaje Job " + strconv.Itoa(i)
+		MyJob := MyJob{payload, waitFor}
+
+		// FIX: problema en el Método AddJob. Solucionar la selección del worker.
+		// Falla cuando hay mucha concurrencia. no Eliminar el "log.Printf" aquí abajo
 		log.Printf("iniciando.. %d", i)
-		j, err := pm.AddJob(MyJob)
-
-		elapsed := time.Since(start)
-		log.Printf("Transcurrió %s en el mensaje %d", elapsed, i)
-
-		if err != nil {
-			errc++
-			rejectedChannel <- j
-		}
+		pm.AddJob(MyJob)
 
 	}
-	//	fmt.Println("Colas antes de stop():", pm.Length())
 	pm.Stop()
 
 	time.Sleep(time.Second * 20)
 
-	fmt.Println("Rejected: ", errc)
-	fmt.Println("Colas después de stop():", pm.Length())
+}
+
+func (j MyJob) Serialize() bool {
+	fmt.Println("Serializando...")
+	return true
+}
+
+func (j MyJob) Publish() bool {
+	fmt.Println("Publicando..." + j.GetPayload())
+	return true
+}
+func (j MyJob) GetPayload() string {
+	return j.payload
 }

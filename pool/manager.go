@@ -1,4 +1,4 @@
-// Package pool
+// Package pool implements a pool of workers funcionality
 // Author: rafael.pellicer@gmail.com
 package pool
 
@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	IsOk   string = "OK"
-	Locked string = "Locked"
+	isOk   string = "OK"
+	locked string = "Locked"
 )
 
 // Manager of the pool
@@ -21,23 +21,21 @@ type Manager struct {
 	maxElementsPerQueue int
 	cIndex              int
 	mutex               sync.Mutex
-	rejected            chan Job
+	rejected            chan iJob
 }
 
-// Job type.
-type Job struct {
-	// Payload
-	Payload string
-
-	// Wait
-	Wait time.Duration
+// iJob Interface Contains methods for serialize and publish data.
+type iJob interface {
+	GetPayload() string
+	Serialize() bool
+	Publish() bool
 }
 
 // Worker
 type Worker struct {
 	id        int
 	startedAt time.Time
-	messages  chan Job
+	messages  chan iJob
 	signals   chan string
 	status    string
 }
@@ -49,13 +47,15 @@ func (w *Worker) Listen(wg *sync.WaitGroup) {
 	for {
 		select {
 		case msg := <-w.messages:
-			fmt.Println("Mensaje recibido por el worker: ", w.id, msg.Payload)
+			if msg.Serialize() {
+				msg.Publish()
+			}
 
 			//time.Sleep(time.Second * msg.wait)
 			break
 		case <-w.signals:
 			fmt.Println("finalizando el worker ", w.id)
-			w.status = Locked
+			w.status = locked
 			close(w.messages)
 
 			return
@@ -104,11 +104,12 @@ func (p *Manager) Stop() {
 	return
 }
 
-// AddJob to de pool
-func (p *Manager) AddJob(j Job) (Job, error) {
+// AddJob to the pool
+func (p *Manager) AddJob(j iJob) (iJob, error) {
 	var w *Worker
 
-	// Selección del índice
+	// FIX:
+	// Falla cuando hay mucha concurrencia.
 	p.mutex.Lock()
 	if p.cIndex+1 >= len(p.workers) {
 		p.cIndex = 0
@@ -133,21 +134,22 @@ func (p *Manager) Length() int {
 	var AliveCounter int
 
 	for _, w := range p.workers {
-		if w.status == IsOk {
+		if w.status == isOk {
 			AliveCounter++
 		}
 	}
 	return AliveCounter
 }
 
+// createWorker Create a worker in the pool.
 func (p *Manager) createWorker(id int) *Worker {
 
 	w := new(Worker)
 
 	w.id = id
-	w.status = IsOk
+	w.status = isOk
 	w.startedAt = time.Now()
-	w.messages = make(chan Job)
+	w.messages = make(chan iJob)
 	w.signals = make(chan string)
 
 	p.workers = append(p.workers, w)
