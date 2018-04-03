@@ -1,3 +1,5 @@
+// Package pool
+// Author: rafael.pellicer@gmail.com
 package pool
 
 import (
@@ -61,7 +63,7 @@ func (w *Worker) Listen(wg *sync.WaitGroup) {
 	}
 }
 
-// GetMaxWorkwers var
+// GetMaxWorkwers returns the maximum number of workers in the pool
 func (p *Manager) GetMaxWorkers() int {
 	return p.maxWorkers
 }

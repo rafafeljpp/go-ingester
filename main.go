@@ -45,10 +45,10 @@ func main() {
 		}
 
 	}
-	fmt.Println("Colas antes de stop():", pm.Length())
+	//	fmt.Println("Colas antes de stop():", pm.Length())
 	pm.Stop()
 
-	//time.Sleep(time.Second * 20)
+	time.Sleep(time.Second * 20)
 
 	fmt.Println("Rejected: ", errc)
 	fmt.Println("Colas después de stop():", pm.Length())
