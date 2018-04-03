@@ -14,10 +14,8 @@ type MyJob struct {
 }
 
 func main() {
-
 	var waitFor time.Duration
 
-	//rejectedChannel := make(chan MyJob)
 	pm := new(pool.Manager)
 
 	//Iniciando...
@@ -49,16 +47,18 @@ func main() {
 	time.Sleep(time.Second * 20)
 
 }
-
+// Método para serializar el payload
 func (j MyJob) Serialize() bool {
 	fmt.Println("Serializando...")
 	return true
 }
 
+// Publicar a donde yo quiera
 func (j MyJob) Publish() bool {
 	fmt.Println("Publicando..." + j.GetPayload())
 	return true
 }
+/
 func (j MyJob) GetPayload() string {
 	return j.payload
 }
