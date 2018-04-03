@@ -14,8 +14,10 @@ type MyJob struct {
 }
 
 func main() {
+
 	var waitFor time.Duration
 
+	//rejectedChannel := make(chan MyJob)
 	pm := new(pool.Manager)
 
 	//Iniciando...
@@ -29,9 +31,6 @@ func main() {
 
 	for i := 0; i < 50; i++ {
 		waitFor = 0
-		if i == 10 {
-			waitFor = 12
-		}
 
 		payload := "Mensaje Job " + strconv.Itoa(i)
 		MyJob := MyJob{payload, waitFor}
@@ -47,6 +46,7 @@ func main() {
 	time.Sleep(time.Second * 20)
 
 }
+
 // Método para serializar el payload
 func (j MyJob) Serialize() bool {
 	fmt.Println("Serializando...")
@@ -58,7 +58,8 @@ func (j MyJob) Publish() bool {
 	fmt.Println("Publicando..." + j.GetPayload())
 	return true
 }
-/
+
+// Retornar el Payload
 func (j MyJob) GetPayload() string {
 	return j.payload
 }
