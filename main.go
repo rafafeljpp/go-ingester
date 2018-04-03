@@ -33,12 +33,12 @@ func main() {
 		waitFor = 0
 
 		payload := "Mensaje Job " + strconv.Itoa(i)
-		MyJob := MyJob{payload, waitFor}
+		mj := MyJob{payload, waitFor}
 
 		// FIX: problema en el Método AddJob. Solucionar la selección del worker.
 		// Falla cuando hay mucha concurrencia. no Eliminar el "log.Printf" aquí abajo
 		log.Printf("iniciando.. %d", i)
-		pm.AddJob(MyJob)
+		pm.AddJob(mj)
 
 	}
 	pm.Stop()
