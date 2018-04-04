@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// MyJob Estructura
 type MyJob struct {
 	payload string
 	wait    time.Duration
@@ -49,24 +50,24 @@ func main() {
 
 }
 
-// Método para serializar el payload
+// Serialize Método para serializar el payload
 func (j MyJob) Serialize() bool {
 	//fmt.Println("Serializando...")
 	return true
 }
 
-// Publicar a donde yo quiera
+// Publish Publicar a donde yo quiera
 func (j MyJob) Publish() bool {
 	fmt.Println("Publicando..." + j.GetPayload())
-	return false
+	return true
 }
 
-// Retornar el Payload
+// GetPayload Retornar el Payload
 func (j MyJob) GetPayload() string {
 	return j.payload
 }
 
-// Recibir los mensajes rechazados
+// Rejected Recibir los mensajes rechazados
 func (j MyJob) Rejected() {
 	fmt.Println("Mensaje Rechazado", j)
 }
