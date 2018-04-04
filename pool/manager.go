@@ -1,5 +1,5 @@
-// Package pool implements a pool of workers funcionality
-// Author: rafael.pellicer@gmail.com
+// Package pool Implementa la funcionalidad de un pool de hilos.
+// @author: rafael.pellicer@gmail.com
 package pool
 
 import (
@@ -16,31 +16,32 @@ const (
 
 // Manager of the pool
 type Manager struct {
-	workers             []*Worker
-	maxWorkers          int
-	maxElementsPerQueue int
-	cIndex              int
-	mutex               sync.Mutex
-	rejected            chan iJob
+	workers         []*Worker
+	workersQuantity int
+	queueSize       int
+	cIndex          int
+	mutex           sync.Mutex
+	rejected        chan IJob
 }
 
-// iJob Interface Contains methods for serialize and publish data.
-type iJob interface {
+// IJob Interface Contains methods for serialize and publish data.
+type IJob interface {
 	GetPayload() string
 	Serialize() bool
 	Publish() bool
+	Rejected()
 }
 
-// Worker
+// Worker Estructura que simula un hilo y sus atributos.
 type Worker struct {
 	id        int
 	startedAt time.Time
-	messages  chan iJob
-	signals   chan string
+	messages  chan IJob
+	signals   chan bool
 	status    string
 }
 
-// Listen worker.
+// Listen Escucha los mensajes recibidos en el canal de mensaje (cola).
 func (w *Worker) Listen(wg *sync.WaitGroup) {
 
 	defer wg.Done()
@@ -48,13 +49,15 @@ func (w *Worker) Listen(wg *sync.WaitGroup) {
 		select {
 		case msg := <-w.messages:
 			if msg.Serialize() {
-				msg.Publish()
+				if !msg.Publish() {
+					msg.Rejected()
+				}
+
 			}
 
-			//time.Sleep(time.Second * msg.wait)
 			break
 		case <-w.signals:
-			fmt.Println("finalizando el worker ", w.id)
+
 			w.status = locked
 			close(w.messages)
 
@@ -63,23 +66,22 @@ func (w *Worker) Listen(wg *sync.WaitGroup) {
 	}
 }
 
-// GetMaxWorkwers returns the maximum number of workers in the pool
-func (p *Manager) GetMaxWorkers() int {
-	return p.maxWorkers
+// GetWorkersQuantity Retorna la cantidad de workers establecidos.
+func (p *Manager) GetWorkersQuantity() int {
+	return p.workersQuantity
 }
 
-// Start workers of the pool
-func (p *Manager) Start(mw int, mepq int) {
+// Start inicia los "hilos" del pool.
+func (p *Manager) Start(WorkersQuantity int, QueueSize int) {
 
 	var w *Worker
 	var wg sync.WaitGroup
-	p.maxElementsPerQueue = mepq
-	p.maxWorkers = mw
+	p.queueSize = QueueSize
+	p.workersQuantity = WorkersQuantity
 	p.cIndex = -1
 
 	// Creando workers
-
-	for i := 0; i < p.maxWorkers; i++ {
+	for i := 0; i < p.workersQuantity; i++ {
 		w = p.createWorker(i)
 		wg.Add(1)
 		go w.Listen(&wg)
@@ -88,14 +90,22 @@ func (p *Manager) Start(mw int, mepq int) {
 	wg.Wait()
 }
 
-// Stop the pool
+// Stop Detiene la recepción de mensajes en las colas.
 func (p *Manager) Stop() {
+	clean := func(p *Manager) {
+		fmt.Println("Finalizando el stop")
+		for _, wk := range p.workers {
+			wk.messages = nil
+		}
+	}
+	defer clean(p)
 
 	for _, wk := range p.workers {
-		wk.signals <- "stop"
+		wk.signals <- true
 
 	}
 	for {
+
 		if p.Length() == 0 {
 			break
 		}
@@ -104,8 +114,8 @@ func (p *Manager) Stop() {
 	return
 }
 
-// AddJob to the pool
-func (p *Manager) AddJob(j iJob) (iJob, error) {
+// AddJob Método que añade trabajos a la cola de los workers.
+func (p *Manager) AddJob(j IJob) (IJob, error) {
 	var w *Worker
 
 	// FIX:
@@ -120,7 +130,7 @@ func (p *Manager) AddJob(j iJob) (iJob, error) {
 
 	w = p.workers[p.cIndex]
 
-	if len(w.messages)+1 < p.maxElementsPerQueue {
+	if len(w.messages)+1 < p.queueSize {
 		w.messages <- j
 		return j, nil
 	}
@@ -129,7 +139,7 @@ func (p *Manager) AddJob(j iJob) (iJob, error) {
 
 }
 
-// Length of the pool
+// Length Cantidad de workers activos.
 func (p *Manager) Length() int {
 	var AliveCounter int
 
@@ -141,7 +151,17 @@ func (p *Manager) Length() int {
 	return AliveCounter
 }
 
-// createWorker Create a worker in the pool.
+// CountJobs retorna la cantidad de mensajes que se encuentran en las colas.
+func (p *Manager) CountJobs() int {
+	var counter int
+
+	for _, w := range p.workers {
+		counter += len(w.messages)
+	}
+	return counter
+}
+
+// createWorker Crea un hilo nuevo para el pool
 func (p *Manager) createWorker(id int) *Worker {
 
 	w := new(Worker)
@@ -149,8 +169,8 @@ func (p *Manager) createWorker(id int) *Worker {
 	w.id = id
 	w.status = isOk
 	w.startedAt = time.Now()
-	w.messages = make(chan iJob)
-	w.signals = make(chan string)
+	w.messages = make(chan IJob, p.queueSize)
+	w.signals = make(chan bool)
 
 	p.workers = append(p.workers, w)
 

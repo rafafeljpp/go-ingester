@@ -24,12 +24,12 @@ func main() {
 	go pm.Start(10, 10)
 
 	for {
-		if pm.Length() == pm.GetMaxWorkers() {
+		if pm.Length() == pm.GetWorkersQuantity() {
 			break
 		}
 	}
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 10; i++ {
 		waitFor = 0
 
 		payload := "Mensaje Job " + strconv.Itoa(i)
@@ -41,6 +41,8 @@ func main() {
 		pm.AddJob(mj)
 
 	}
+
+	fmt.Println("Cantidad de jobs", pm.CountJobs())
 	pm.Stop()
 
 	time.Sleep(time.Second * 20)
@@ -49,17 +51,22 @@ func main() {
 
 // Método para serializar el payload
 func (j MyJob) Serialize() bool {
-	fmt.Println("Serializando...")
+	//fmt.Println("Serializando...")
 	return true
 }
 
 // Publicar a donde yo quiera
 func (j MyJob) Publish() bool {
 	fmt.Println("Publicando..." + j.GetPayload())
-	return true
+	return false
 }
 
 // Retornar el Payload
 func (j MyJob) GetPayload() string {
 	return j.payload
+}
+
+// Recibir los mensajes rechazados
+func (j MyJob) Rejected() {
+	fmt.Println("Mensaje Rechazado", j)
 }
