@@ -21,7 +21,6 @@ type Manager struct {
 	queueSize       int
 	cIndex          int
 	mutex           sync.Mutex
-	rejected        chan IJob
 }
 
 // IJob Interface Contains methods for serialize and publish data.
@@ -118,8 +117,6 @@ func (p *Manager) Stop() {
 func (p *Manager) AddJob(j IJob) (IJob, error) {
 	var w *Worker
 
-	// FIX:
-	// Falla cuando hay mucha concurrencia.
 	p.mutex.Lock()
 	if p.cIndex+1 >= len(p.workers) {
 		p.cIndex = 0

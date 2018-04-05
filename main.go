@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"go-ingester/pool"
-	"log"
 	"strconv"
 	"time"
 )
@@ -12,6 +11,7 @@ import (
 type MyJob struct {
 	payload string
 	wait    time.Duration
+	init    time.Time
 }
 
 func main() {
@@ -24,29 +24,19 @@ func main() {
 	//Iniciando...
 	go pm.Start(10, 10)
 
-	for {
-		if pm.Length() == pm.GetWorkersQuantity() {
-			break
-		}
-	}
+	time.Sleep(time.Millisecond * 10)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 10000; i++ {
+		start := time.Now()
 		waitFor = 0
 
 		payload := "Mensaje Job " + strconv.Itoa(i)
-		mj := MyJob{payload, waitFor}
-
-		// FIX: problema en el Método AddJob. Solucionar la selección del worker.
-		// Falla cuando hay mucha concurrencia. no Eliminar el "log.Printf" aquí abajo
-		log.Printf("iniciando.. %d", i)
+		mj := MyJob{payload, waitFor, start}
 		pm.AddJob(mj)
 
 	}
 
-	fmt.Println("Cantidad de jobs", pm.CountJobs())
 	pm.Stop()
-
-	time.Sleep(time.Second * 20)
 
 }
 
@@ -58,7 +48,9 @@ func (j MyJob) Serialize() bool {
 
 // Publish Publicar a donde yo quiera
 func (j MyJob) Publish() bool {
-	fmt.Println("Publicando..." + j.GetPayload())
+	var elapse time.Duration
+	elapse = time.Since(j.init)
+	fmt.Println("Publicando..." + elapse.String())
 	return true
 }
 
