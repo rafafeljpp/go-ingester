@@ -3,8 +3,10 @@
 package pool
 
 import (
+	"container/ring"
 	"errors"
 	"fmt"
+	"go-ingester/metrics"
 	"sync"
 	"time"
 )
@@ -19,8 +21,8 @@ type Manager struct {
 	workers         []*Worker
 	workersQuantity int
 	queueSize       int
-	cIndex          int
 	mutex           sync.Mutex
+	indexSelector   *ring.Ring
 }
 
 // IJob Interface Contains methods for serialize and publish data.
@@ -38,6 +40,7 @@ type Worker struct {
 	messages  chan IJob
 	signals   chan bool
 	status    string
+	metrics   pool.Metrics
 }
 
 // Listen Escucha los mensajes recibidos en el canal de mensaje (cola).
@@ -75,15 +78,18 @@ func (p *Manager) Start(WorkersQuantity int, QueueSize int) {
 
 	var w *Worker
 	var wg sync.WaitGroup
+
 	p.queueSize = QueueSize
 	p.workersQuantity = WorkersQuantity
-	p.cIndex = -1
+	p.indexSelector = ring.New(p.workersQuantity)
 
 	// Creando workers
 	for i := 0; i < p.workersQuantity; i++ {
+		p.indexSelector.Value = i
 		w = p.createWorker(i)
 		wg.Add(1)
 		go w.Listen(&wg)
+		p.indexSelector = p.indexSelector.Next()
 	}
 
 	wg.Wait()
@@ -118,14 +124,8 @@ func (p *Manager) AddJob(j IJob) (IJob, error) {
 	var w *Worker
 
 	p.mutex.Lock()
-	if p.cIndex+1 >= len(p.workers) {
-		p.cIndex = 0
-	} else {
-		p.cIndex++
-	}
+	w = p.workers[p.indexSelector.Next().Value.(int)]
 	p.mutex.Unlock()
-
-	w = p.workers[p.cIndex]
 
 	if len(w.messages)+1 < p.queueSize {
 		w.messages <- j

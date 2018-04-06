@@ -68,15 +68,16 @@ func TestWorkFlow(t *testing.T) {
 	}
 
 	time.Sleep(time.Second * 3)
+
 	myPool.AddJob(j)
 
 	if myPool.CountJobs() > 0 {
 		//fmt.Println(myPool.CountJobs())
-		t.Fatal("La cantidad de workers no es la esperada se estén recibiendo los mensajes en el canal")
+		t.Fatal("La cantidad de trabajos no es la esperada se estén recibiendo los mensajes en el canal")
 	}
 
 	if myPool.Length() != 10 {
-		t.Fatal("La cantidad de trabajos no es la esperada.")
+		t.Fatal("La cantidad de workers no es la esperada.")
 	}
 
 	myPool.Stop()
