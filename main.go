@@ -26,7 +26,7 @@ func main() {
 
 	time.Sleep(time.Millisecond * 10)
 
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < 10000; i++ {
 		start := time.Now()
 		waitFor = 0
 

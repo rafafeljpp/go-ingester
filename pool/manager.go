@@ -6,7 +6,6 @@ import (
 	"container/ring"
 	"errors"
 	"fmt"
-	"go-ingester/metrics"
 	"sync"
 	"time"
 )
@@ -40,7 +39,6 @@ type Worker struct {
 	messages  chan IJob
 	signals   chan bool
 	status    string
-	metrics   pool.Metrics
 }
 
 // Listen Escucha los mensajes recibidos en el canal de mensaje (cola).

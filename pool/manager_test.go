@@ -10,6 +10,7 @@ import (
 type TestJob struct {
 	payload string
 	wait    time.Duration
+	init    time.Time
 }
 
 // Método para serializar el payload
@@ -57,7 +58,7 @@ func TestWorkFlow(t *testing.T) {
 
 	myPool := new(pool.Manager)
 
-	j = TestJob{"MiJob", 0}
+	j = TestJob{"MiJob", 0, time.Now()}
 
 	go myPool.Start(10, 10)
 
@@ -89,3 +90,52 @@ func TestWorkFlow(t *testing.T) {
 	}
 
 }
+
+/*
+func TestProfiling(t *testing.T) {
+	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+	var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	// ... rest of the program ...
+
+	myPool := new(pool.Manager)
+
+	go myPool.Start(10, 10)
+	time.Sleep(time.Millisecond * 10)
+
+	for i := 0; i < 1000000; i++ {
+
+		payload := "Mensaje Job " + strconv.Itoa(i)
+		mj := TestJob{payload, 0, time.Now()}
+		myPool.AddJob(mj)
+
+	}
+
+	myPool.Stop()
+
+	// end
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+		f.Close()
+	}
+}
+*/
