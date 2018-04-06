@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"go-ingester/pool"
 	"strconv"
 	"time"
+
+	"github.com/rafafeljpp/go-ingester/pool"
 )
 
 // MyJob Estructura
@@ -15,16 +16,14 @@ type MyJob struct {
 }
 
 func main() {
-
 	var waitFor time.Duration
 
-	//rejectedChannel := make(chan MyJob)
-	pm := new(pool.Manager)
+	pm := pool.NewManager(10, 10)
 
-	//Iniciando...
-	go pm.Start(10, 10)
+	// Iniciando...
+	pm.Start()
 
-	time.Sleep(time.Millisecond * 10)
+	//time.Sleep(time.Millisecond * 10)
 
 	for i := 0; i < 10000; i++ {
 		start := time.Now()
@@ -37,7 +36,6 @@ func main() {
 	}
 
 	pm.Stop()
-
 }
 
 // Serialize Método para serializar el payload
