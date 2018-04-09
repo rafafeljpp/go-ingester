@@ -12,5 +12,10 @@ debug*
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+*.prof
+pool/*.out
+pool/*.prof
+
 #Another one
 *.DS_Store 
+*.vscode
