@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"go-ingester/pool"
+	"go-ingester/pkg/pool" // mientras esté en desarrollo
 )
 
 // MyJob Estructura

@@ -13,8 +13,8 @@ debug*
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 *.prof
-pool/*.out
-pool/*.prof
+pkg/*/*.out
+pkg/*/*.prof
 
 #Another one
 *.DS_Store 

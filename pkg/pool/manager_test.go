@@ -2,7 +2,7 @@ package pool_test
 
 import (
 	"fmt"
-	"go-ingester/pool"
+	"go-ingester/pkg/pool"
 	"testing"
 	"time"
 )

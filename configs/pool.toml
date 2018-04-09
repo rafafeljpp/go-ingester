@@ -1,0 +1,13 @@
+title = "Pool Application"
+
+[owner]
+    name = "Rafael Pellicer"
+    organization = "SIGIS, Soluciones Integrales GIS, C.A."
+    bio = "GDT"
+
+[pool]
+    id = "LOQUEQUIERAS"
+    numworkers = 10
+    maxperqueue = 10
+[logs]
+    
