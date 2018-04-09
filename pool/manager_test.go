@@ -56,7 +56,6 @@ func TestWorkFlow(t *testing.T) {
 	var j TestJob
 
 	myPool := pool.NewManager(10, 10)
-
 	j = TestJob{"MiJob", 0, time.Now()}
 
 	myPool.Start()
