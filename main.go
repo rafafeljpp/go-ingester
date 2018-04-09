@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -11,51 +12,57 @@ import (
 // MyJob Estructura
 type MyJob struct {
 	payload string
-	wait    time.Duration
 	init    time.Time
+	id      int
 }
 
 func main() {
-	var waitFor time.Duration
 
-	pm := pool.NewManager(10, 10)
+	pm := pool.NewManager(1000, 10)
 
-	// Iniciando...
+	fmt.Println("Iniciando")
 	pm.Start()
 
 	for i := 0; i < 10000; i++ {
 		start := time.Now()
-		waitFor = 0
-
-		payload := "Mensaje Job " + strconv.Itoa(i)
-		mj := MyJob{payload, waitFor, start}
+		payload := "Job " + strconv.Itoa(i)
+		mj := MyJob{payload, start, i}
 		pm.AddJob(mj)
 
 	}
 
 	pm.Stop()
+	mj := MyJob{"A", time.Now(), 0}
+	pm.AddJob(mj)
+	fmt.Println("End")
 }
 
-// Serialize Método para validar
+// IsValid Método para validar el Job
 func (j MyJob) IsValid() bool {
-	//fmt.Println("Serializando...")
-	return true
+
+	x := float64(j.id)
+
+	if math.Mod(x, 2) == 0 {
+		return true
+	}
+
+	return false
 }
 
-// Publish Publicar a donde yo quiera
-func (j MyJob) Publish() bool {
+// Publish  donde yo quiera
+func (j MyJob) Publish() (bool, error) {
 	var elapse time.Duration
+	retVal := true
 	elapse = time.Since(j.init)
-	fmt.Println("Publicando..." + elapse.String())
-	return true
-}
+	fmt.Println("Mensaje Publicado: " + elapse.String())
 
-// GetPayload Retornar el Payload
-func (j MyJob) GetPayload() string {
-	return j.payload
+	return retVal, nil
 }
 
 // Rejected Recibir los mensajes rechazados
-func (j MyJob) Rejected() {
-	fmt.Println("Mensaje Rechazado", j)
+func (j MyJob) Rejected(e error) {
+	var elapse time.Duration
+	elapse = time.Since(j.init)
+
+	fmt.Println("Mensaje Rechazado: "+strconv.Itoa(j.id)+" -> "+e.Error(), elapse)
 }

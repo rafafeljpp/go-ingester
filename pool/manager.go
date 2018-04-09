@@ -5,7 +5,6 @@ package pool
 import (
 	"container/ring"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 )
@@ -22,14 +21,14 @@ type Manager struct {
 	queueSize       int
 	mutex           sync.Mutex
 	indexSelector   *ring.Ring
+	status          string
 }
 
 // IJob Interface Contains methods for serialize and publish data.
 type IJob interface {
-	GetPayload() string
 	IsValid() bool
-	Publish() bool
-	Rejected()
+	Publish() (bool, error)
+	Rejected(error)
 }
 
 // Worker Estructura que simula un hilo y sus atributos.
@@ -61,11 +60,6 @@ func newWorker(id int, QueueSize int) *Worker {
 	}
 }
 
-// GetWorkersQuantity Retorna la cantidad de workers establecidos.
-/*func (p *Manager) GetWorkersQuantity() int {
-	return p.workersQuantity
-}*/
-
 // Start inicia los "hilos" del pool.
 func (p *Manager) Start() {
 
@@ -80,13 +74,17 @@ func (p *Manager) Start() {
 		p.indexSelector = p.indexSelector.Next()
 	}
 
+	if p.workersQuantity > 0 {
+		p.status = isOk
+	}
+
 }
 
 // Stop Detiene la recepción de mensajes en las colas.
 func (p *Manager) Stop() {
+	p.status = locked
 
 	defer func(p *Manager) {
-		fmt.Println("Finalizando el stop")
 		for _, wk := range p.workers {
 			wk.messages = nil
 		}
@@ -96,6 +94,7 @@ func (p *Manager) Stop() {
 		wk.signals <- true
 
 	}
+
 	for {
 
 		if p.Length() == 0 {
@@ -107,18 +106,20 @@ func (p *Manager) Stop() {
 }
 
 // AddJob Método que añade trabajos a la cola de los workers.
-func (p *Manager) AddJob(j IJob) (IJob, error) {
+func (p *Manager) AddJob(j IJob) IJob {
 
-	p.mutex.Lock()
-	w := p.workers[p.indexSelector.Next().Value.(int)]
-	p.mutex.Unlock()
+	if p.status == isOk {
+		p.mutex.Lock()
+		w := p.workers[p.indexSelector.Next().Value.(int)]
+		p.mutex.Unlock()
 
-	if len(w.messages)+1 < p.queueSize {
 		w.messages <- j
-		return j, nil
+		return j
 	}
 
-	return j, errors.New("Rechazado, Máximo número de elementos en cola o mensaje bloqueado")
+	j.Rejected(errors.New("Rejected: There are no active workers or stop in progress"))
+
+	return nil
 
 }
 
@@ -146,15 +147,22 @@ func (p *Manager) CountJobs() int {
 
 // Listen Escucha los mensajes recibidos en el canal de mensajes (cola).
 func (w *Worker) listen() {
+	var published bool
+	var isValid bool
 
 	for {
+		published = false
+		err := errors.New("Rejected: Isn't a valid Job")
+
 		select {
 		case msg := <-w.messages:
-			if msg.IsValid() {
-				if !msg.Publish() {
-					msg.Rejected()
-				}
+			isValid = msg.IsValid()
 
+			if !isValid {
+				published, err = msg.Publish()
+			}
+			if !published {
+				msg.Rejected(err)
 			}
 
 			break

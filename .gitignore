@@ -18,4 +18,4 @@ pool/*.prof
 
 #Another one
 *.DS_Store 
-*.vscode
+.vscode

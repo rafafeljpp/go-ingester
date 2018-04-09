@@ -9,7 +9,6 @@ import (
 
 type TestJob struct {
 	payload string
-	wait    time.Duration
 	init    time.Time
 }
 
@@ -19,20 +18,17 @@ func (j TestJob) IsValid() bool {
 	return true
 }
 
-// Publicar a donde yo quiera
-func (j TestJob) Publish() bool {
-	fmt.Println("Publicando..." + j.GetPayload())
-	return true
-}
-
-// Retornar el Payload
-func (j TestJob) GetPayload() string {
-	return j.payload
-}
-
 // Rechazados
-func (j TestJob) Rejected() {
+func (j TestJob) Rejected(e error) {
 	fmt.Println("Rechazados")
+}
+
+// Publish Publicar a donde yo quiera
+func (j TestJob) Publish() (bool, error) {
+	var elapse time.Duration
+	elapse = time.Since(j.init)
+	fmt.Println("Mensaje Publicado: " + elapse.String())
+	return true, nil
 }
 
 /**************************************************
@@ -56,23 +52,20 @@ func TestWorkFlow(t *testing.T) {
 	var j TestJob
 
 	myPool := pool.NewManager(10, 10)
-	j = TestJob{"MiJob", 0, time.Now()}
+	j = TestJob{"MiJob", time.Now()}
 
 	myPool.Start()
-
-	time.Sleep(time.Second * 3)
 
 	if myPool.Length() != 10 {
 		t.Fatal("No se crearon los workers correctamente. Verifique el método Start()")
 	}
 
-	time.Sleep(time.Second * 3)
-
+	myPool.AddJob(j)
 	myPool.AddJob(j)
 
-	if myPool.CountJobs() > 0 {
+	if myPool.CountJobs() != 2 {
 
-		t.Fatal("La cantidad de trabajos no es la esperada se estén recibiendo los mensajes en el canal")
+		t.Fatal("La cantidad de trabajos no es la esperada")
 	}
 
 	if myPool.Length() != 10 {
@@ -80,8 +73,6 @@ func TestWorkFlow(t *testing.T) {
 	}
 
 	myPool.Stop()
-
-	time.Sleep(time.Second * 5)
 
 	if myPool.Length() > 0 {
 		t.Fatal("La cantidad de trabajos, luego del Stop() no es la esperada.")
