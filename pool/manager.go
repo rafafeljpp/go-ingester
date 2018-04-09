@@ -41,28 +41,23 @@ type Worker struct {
 	status    string
 }
 
-// Listen Escucha los mensajes recibidos en el canal de mensaje (cola).
-func (w *Worker) Listen(wg *sync.WaitGroup) {
+// NewManager create a new Manager instance
+func NewManager(WorkersQuantity int, QueueSize int) *Manager {
+	return &Manager{
+		queueSize:       QueueSize,
+		workersQuantity: WorkersQuantity,
+		indexSelector:   ring.New(WorkersQuantity),
+	}
+}
 
-	defer wg.Done()
-	for {
-		select {
-		case msg := <-w.messages:
-			if msg.Serialize() {
-				if !msg.Publish() {
-					msg.Rejected()
-				}
-
-			}
-
-			break
-		case <-w.signals:
-
-			w.status = locked
-			close(w.messages)
-
-			return
-		}
+// NewWorker create a new workder instance
+func newWorker(id int, QueueSize int) *Worker {
+	return &Worker{
+		id:        id,
+		status:    isOk,
+		startedAt: time.Now(),
+		messages:  make(chan IJob, QueueSize),
+		signals:   make(chan bool),
 	}
 }
 
@@ -72,36 +67,30 @@ func (p *Manager) GetWorkersQuantity() int {
 }
 
 // Start inicia los "hilos" del pool.
-func (p *Manager) Start(WorkersQuantity int, QueueSize int) {
-
-	var w *Worker
-	var wg sync.WaitGroup
-
-	p.queueSize = QueueSize
-	p.workersQuantity = WorkersQuantity
-	p.indexSelector = ring.New(p.workersQuantity)
+func (p *Manager) Start() {
 
 	// Creando workers
 	for i := 0; i < p.workersQuantity; i++ {
 		p.indexSelector.Value = i
-		w = p.createWorker(i)
-		wg.Add(1)
-		go w.Listen(&wg)
+
+		w := newWorker(i, p.queueSize)
+		go w.listen()
+
+		p.workers = append(p.workers, w)
 		p.indexSelector = p.indexSelector.Next()
 	}
 
-	wg.Wait()
 }
 
 // Stop Detiene la recepción de mensajes en las colas.
 func (p *Manager) Stop() {
-	clean := func(p *Manager) {
+
+	defer func(p *Manager) {
 		fmt.Println("Finalizando el stop")
 		for _, wk := range p.workers {
 			wk.messages = nil
 		}
-	}
-	defer clean(p)
+	}(p)
 
 	for _, wk := range p.workers {
 		wk.signals <- true
@@ -119,10 +108,9 @@ func (p *Manager) Stop() {
 
 // AddJob Método que añade trabajos a la cola de los workers.
 func (p *Manager) AddJob(j IJob) (IJob, error) {
-	var w *Worker
 
 	p.mutex.Lock()
-	w = p.workers[p.indexSelector.Next().Value.(int)]
+	w := p.workers[p.indexSelector.Next().Value.(int)]
 	p.mutex.Unlock()
 
 	if len(w.messages)+1 < p.queueSize {
@@ -156,18 +144,25 @@ func (p *Manager) CountJobs() int {
 	return counter
 }
 
-// createWorker Crea un hilo nuevo para el pool
-func (p *Manager) createWorker(id int) *Worker {
+// Listen Escucha los mensajes recibidos en el canal de mensaje (cola).
+func (w *Worker) listen() {
 
-	w := new(Worker)
+	for {
+		select {
+		case msg := <-w.messages:
+			if msg.Serialize() {
+				if !msg.Publish() {
+					msg.Rejected()
+				}
 
-	w.id = id
-	w.status = isOk
-	w.startedAt = time.Now()
-	w.messages = make(chan IJob, p.queueSize)
-	w.signals = make(chan bool)
+			}
 
-	p.workers = append(p.workers, w)
+			break
+		case <-w.signals:
+			w.status = locked
+			close(w.messages)
 
-	return w
+			return
+		}
+	}
 }
