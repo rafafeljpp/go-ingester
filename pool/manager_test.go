@@ -14,7 +14,7 @@ type TestJob struct {
 }
 
 // Método para serializar el payload
-func (j TestJob) Serialize() bool {
+func (j TestJob) IsValid() bool {
 	fmt.Println("Serializando...")
 	return true
 }
@@ -40,27 +40,26 @@ func (j TestJob) Rejected() {
  **************************************************/
 
 func TestPoolInstanciation(t *testing.T) {
-	myPool := new(pool.Manager)
+	myPool := pool.NewManager(10, 100)
+	myPool.Start()
+
+	if myPool.Length() != 10 {
+		t.Fatal("There are ", myPool.Length())
+
+	}
 
 	t.Log(myPool)
-}
-
-func TestGetMaxWorkers(t *testing.T) {
-	myPool := new(pool.Manager)
-	if myPool.GetWorkersQuantity() != 0 {
-		t.Fail()
-	}
 
 }
 
 func TestWorkFlow(t *testing.T) {
 	var j TestJob
 
-	myPool := new(pool.Manager)
+	myPool := pool.NewManager(10, 10)
 
 	j = TestJob{"MiJob", 0, time.Now()}
 
-	go myPool.Start(10, 10)
+	myPool.Start()
 
 	time.Sleep(time.Second * 3)
 
@@ -73,7 +72,7 @@ func TestWorkFlow(t *testing.T) {
 	myPool.AddJob(j)
 
 	if myPool.CountJobs() > 0 {
-		//fmt.Println(myPool.CountJobs())
+
 		t.Fatal("La cantidad de trabajos no es la esperada se estén recibiendo los mensajes en el canal")
 	}
 
@@ -109,9 +108,9 @@ func TestProfiling(t *testing.T) {
 
 	// ... rest of the program ...
 
-	myPool := new(pool.Manager)
+	myPool := pool.NewManager(10, 10)
 
-	go myPool.Start(10, 10)
+	myPool.Start()
 	time.Sleep(time.Millisecond * 10)
 
 	for i := 0; i < 1000000; i++ {

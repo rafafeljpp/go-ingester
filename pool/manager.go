@@ -27,7 +27,7 @@ type Manager struct {
 // IJob Interface Contains methods for serialize and publish data.
 type IJob interface {
 	GetPayload() string
-	Serialize() bool
+	IsValid() bool
 	Publish() bool
 	Rejected()
 }
@@ -62,9 +62,9 @@ func newWorker(id int, QueueSize int) *Worker {
 }
 
 // GetWorkersQuantity Retorna la cantidad de workers establecidos.
-func (p *Manager) GetWorkersQuantity() int {
+/*func (p *Manager) GetWorkersQuantity() int {
 	return p.workersQuantity
-}
+}*/
 
 // Start inicia los "hilos" del pool.
 func (p *Manager) Start() {
@@ -144,13 +144,13 @@ func (p *Manager) CountJobs() int {
 	return counter
 }
 
-// Listen Escucha los mensajes recibidos en el canal de mensaje (cola).
+// Listen Escucha los mensajes recibidos en el canal de mensajes (cola).
 func (w *Worker) listen() {
 
 	for {
 		select {
 		case msg := <-w.messages:
-			if msg.Serialize() {
+			if msg.IsValid() {
 				if !msg.Publish() {
 					msg.Rejected()
 				}

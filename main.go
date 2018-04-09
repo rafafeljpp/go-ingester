@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/rafafeljpp/go-ingester/pool"
+	"go-ingester/pool"
 )
 
 // MyJob Estructura
@@ -23,8 +23,6 @@ func main() {
 	// Iniciando...
 	pm.Start()
 
-	//time.Sleep(time.Millisecond * 10)
-
 	for i := 0; i < 10000; i++ {
 		start := time.Now()
 		waitFor = 0
@@ -38,8 +36,8 @@ func main() {
 	pm.Stop()
 }
 
-// Serialize Método para serializar el payload
-func (j MyJob) Serialize() bool {
+// Serialize Método para validar
+func (j MyJob) IsValid() bool {
 	//fmt.Println("Serializando...")
 	return true
 }
