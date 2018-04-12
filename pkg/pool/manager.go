@@ -94,33 +94,31 @@ func (p *Manager) Stop() {
 		wk.signals <- true
 
 	}
+	/*
+		for {
 
-	for {
+			if p.Length() == 0 {
+				break
+			}
 
-		if p.Length() == 0 {
-			break
 		}
-
-	}
+	*/
 	return
 }
 
 // AddJob Método que añade trabajos a la cola de los workers.
 func (p *Manager) AddJob(j IJob) IJob {
-
-	if p.status == isOk {
-		p.mutex.Lock()
-		w := p.workers[p.indexSelector.Next().Value.(int)]
-		p.mutex.Unlock()
-
-		w.messages <- j
-		return j
+	if p.status != isOk {
+		j.Rejected(errors.New("Rejected: There are no active workers or stop in progress"))
+		return nil
 	}
 
-	j.Rejected(errors.New("Rejected: There are no active workers or stop in progress"))
+	p.mutex.Lock()
+	w := p.workers[p.indexSelector.Next().Value.(int)]
+	p.mutex.Unlock()
 
-	return nil
-
+	w.messages <- j
+	return j
 }
 
 // Length Cantidad de workers activos.
@@ -158,7 +156,7 @@ func (w *Worker) listen() {
 		case msg := <-w.messages:
 			isValid = msg.IsValid()
 
-			if !isValid {
+			if isValid {
 				published, err = msg.Publish()
 			}
 			if !published {
