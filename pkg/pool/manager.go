@@ -94,15 +94,15 @@ func (p *Manager) Stop() {
 		wk.signals <- true
 
 	}
-	/*
-		for {
 
-			if p.Length() == 0 {
-				break
-			}
+	for {
 
+		if p.Length() == 0 {
+			break
 		}
-	*/
+
+	}
+
 	return
 }
 
